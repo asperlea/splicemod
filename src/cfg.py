@@ -146,11 +146,13 @@ ens_lcl_db_dict = {'host':  "127.0.0.1",
 ens_rmt_db_dict = {'host': 'ensembldb.ensembl.org',
                    'user': 'anonymous',
                    'port': 5306,
-                   'passwd': ''}
+                   'passwd': '',
+                   'db':     "homo_sapiens_core_63_37"}
 
-ens_data_dir = '/Users/dbgoodman/Dropbox/intron/data/ccds_ensembl/'
-ens_gbk_dir = ens_data_dir + 'gbk/'
-ens_fas_dir = ens_data_dir + 'fas/'
+ens_data_dir = '/Users/adriana/Dropbox/intron/data/ccds_ensembl/'
+lcl_data_dir   = '/Users/adriana/Sri Kosuri Rotation Project/splicemod_data/'
+ens_gbk_dir = lcl_data_dir + 'gbk/'
+ens_fas_dir = lcl_data_dir + 'fas/'
 # ens_exon_fn = ens_data_dir + 'all_CCDS_exons.sorted.tsv'
 ens_exon_fn = ens_data_dir + '11.27.12.all_111_CCDS_exons.sorted.txt'
 ens_exon_stats = ens_data_dir + '1000_CCDS_exon_stats.txt'
@@ -190,7 +192,7 @@ chip_ds_min = 30
 chip_intron_padding = 50
 # number of exons to choose (randomly) to mutate
 # chip_number_to_mutate = 305
-chip_number_to_mutate = 5 
+chip_number_to_mutate = 0
 
 
 

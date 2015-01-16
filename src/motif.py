@@ -438,7 +438,7 @@ Ke2011_ESS = SeqMotifType(type='Ke2011_ESS',
                             upstr=None,
                             invariant=[],
                             score_type='acora',
-                            score_dict='/Users/dbgoodman/Dropbox/intron/' + \
+                            score_dict='/Users/adriana/Dropbox/intron/' + \
                                          'sequences/motifs/Ke2011/ESSseq.txt',
                             filter_score=lambda val: float(val) < 0,
                             can_consolidate=True,
@@ -451,7 +451,7 @@ Ke2011_ESE = SeqMotifType(type='Ke2011_ESE',
                             upstr=None,
                             invariant=[],
                             score_type='acora',
-                            score_dict='/Users/dbgoodman/Dropbox/intron/' + \
+                            score_dict='/Users/adriana/Dropbox/intron/' + \
                                          'sequences/motifs/Ke2011/ESEseq.txt',
                             filter_score=lambda val: float(val) > 0,
                             can_consolidate=True,
@@ -463,7 +463,7 @@ Vlkr07_DICS = SeqMotifType(type='Vlkr07_DICS',
                             upstr=None,
                             invariant=[],
                             score_type='acora',
-                            score_dict='/Users/dbgoodman/Dropbox/intron/' + \
+                            score_dict='/Users/adriana/Dropbox/intron/' + \
                                          'sequences/motifs/Voelker07/DI_CS.txt',
                             can_consolidate=True,
                             context='donor_intron',
@@ -474,7 +474,7 @@ Vlkr07_AICS = SeqMotifType(type='Vlkr07_AICS',
                             upstr=None,
                             invariant=[],
                             score_type='acora',
-                            score_dict='/Users/dbgoodman/Dropbox/intron/' + \
+                            score_dict='/Users/adriana/Dropbox/intron/' + \
                                          'sequences/motifs/Voelker07/AI_CS.txt',
                             can_consolidate=True,
                             context='acceptor_intron',
@@ -485,9 +485,9 @@ RBPmats = SeqMotifType(type='RBPmats',
                             upstr=None,
                             invariant=[],
                             score_type='pfm',
-                            score_dict='/Users/dbgoodman/Dropbox/intron/' + \
+                            score_dict='/Users/adriana/Dropbox/intron/' + \
                                          'sequences/motifs/jaspar/*.pfm',
-                            score_dist='/Users/dbgoodman/Dropbox/intron/' + \
+                            score_dist='/Users/adriana/Dropbox/intron/' + \
                                          'sequences/motifs/jaspar/dists.txt'
                             )
 
@@ -499,8 +499,8 @@ agg_types = ['Ke2011']
 #===============================================================================
 
 MamConserv = Wiggle(name='MamConserv',
-                        wiggle_dir='/Users/dbgoodman/Documents/Projects/' + \
-                                    'Intron/ensembl/placental_conservation',
+                        wiggle_dir='/Users/adriana/Sri Kosuri Rotation Project/Wiggle/' + \
+                                    'placentalMammals',
                         file_prefix='chr',
                         file_suffix='.phyloP46way.placental.wigFix.gz')
                         

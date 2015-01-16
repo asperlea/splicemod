@@ -19,17 +19,17 @@ import cfg
 import stats
 
 ens_release = cfg.ens_release
-db = MySQLdb.connect(**cfg.ens_lcl_db_dict)
+db = MySQLdb.connect(**cfg.ens_rmt_db_dict)
 
 # pycog = HostAccount(cfg.ens_lcl_db_dict['host'], 
 #                    cfg.ens_lcl_db_dict['user'],
 #                    cfg.ens_lcl_db_dict['passwd'],
 #                    cfg.ens_lcl_db_dict['port'])
 
-pycog_remote = HostAccount(cfg.ens_lcl_db_dict['host'],
-                    cfg.ens_lcl_db_dict['user'],
-                    cfg.ens_lcl_db_dict['passwd'],
-                    cfg.ens_lcl_db_dict['port'])
+pycog_remote = HostAccount(cfg.ens_rmt_db_dict['host'],
+                    cfg.ens_rmt_db_dict['user'],
+                    cfg.ens_rmt_db_dict['passwd'],
+                    cfg.ens_rmt_db_dict['port'])
 
 hs37 = Genome('human', Release=63, account=pycog_remote)
 # hs37_remote = Genome('human', Release=63, account=pycog_remote)
@@ -94,7 +94,7 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
     
     all_exons = exon_file.readlines()
     
-    pdb.set_trace()
+    #pdb.set_trace()
     
     # get random sample to perform mutations on
     random.seed(1)
