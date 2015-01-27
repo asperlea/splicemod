@@ -315,7 +315,7 @@ class Mutant:
                return True
         #otherwise, compare whole exon translations
         else: 
-            orig_str = self.sr.seq.tostring()[slice(*exon_loc)]
+            orig_str = str(self.sr.seq)[slice(*exon_loc)]
             mutant_str = \
                tups_to_str(orig_str, exon_loc, self.set)
             return check_translation(mutant_str, orig_str)
@@ -789,7 +789,7 @@ class MutantCategory:
         wt_allele = sr.seq[slice(*feat.extract_pos())]
         if strand == -1:
             wt_allele = wt_allele.reverse_complement()
-        wt_allele = wt_allele.tostring()
+        wt_allele = str(wt_allele)
         
         #get all alleles from the snp allele string
         alleles = set(feat.qualifiers['alleles'].split('/'))
@@ -802,7 +802,7 @@ class MutantCategory:
         mut_alleles = alleles - set(wt_allele)
         
         if strand == -1:
-            mut_alleles = set([Seq(ma).reverse_complement().tostring() 
+            mut_alleles = set([str(Seq(ma).reverse_complement())
                                for ma in mut_alleles])
         
         start, end = feat.extract_pos()
@@ -1497,8 +1497,8 @@ def mutate_and_iterate(sr, feat, mut_cat, seed=12345, orig_score=None):
 def check_translation(dna1, dna2):
     '''check that two frame-0 dna strings have the same translation'''
     
-    trans1 = Seq(dna1, generic_dna).translate().tostring()
-    trans2 = Seq(dna2, generic_dna).translate().tostring()
+    trans1 = str(Seq(dna1, generic_dna).translate())
+    trans2 = str(Seq(dna2, generic_dna).translate())
     
     #print "{0} ({1}) vs\n{2} ({3})".format(trans1,dna1,trans2,dna2)
     if trans1 == trans2:
@@ -1700,8 +1700,8 @@ def expand_mutants(mut_motifs, bounds, expand, seq_record):
     if seq_len < new_bounds[1]:
          expand = (new_bounds[0], seq_len)
          
-    prepend = seq_record.seq.tostring()[new_bounds[0]:bounds[0]]
-    append = seq_record.seq.tostring()[bounds[1]:new_bounds[1]]
+    prepend = str(seq_record.seq)[new_bounds[0]:bounds[0]]
+    append = str(seq_record.seq)[bounds[1]:new_bounds[1]]
     return map(lambda seq: prepend + seq + append, mut_motifs)
 
 def capitalize_mutant_string(orig_seq, mseq):

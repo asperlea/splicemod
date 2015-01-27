@@ -772,7 +772,7 @@ def force_splice_signals(self):
         
         ex_pos = self.get_features('exon').next().extract_pos()
         new_mtf_loc = tuple([i + ex_pos[exon_idx] for i in mt.bounds])
-        new_mtf_str = self.seq[slice(*new_mtf_loc)].tostring()
+        new_mtf_str = str(self.seq[slice(*new_mtf_loc)])
         
         score = mt.score(string.upper(new_mtf_str))['scores'][0]
         
@@ -898,7 +898,7 @@ def save_all_mutants(self, gb=True, fas=True):
             os.mkdir(path)
     
     #add wild type to seq set
-    seq_set.add(str.upper(self.seq.tostring()))
+    seq_set.add(str.upper(str(self.seq)))
     
     #make one genbank file and one fasta file for each mutant
     
@@ -915,7 +915,7 @@ def save_all_mutants(self, gb=True, fas=True):
         for feat_name, mut_list in mf_dict.items():
             for mut in mut_list:
                 
-                mut_seq = str.upper(mut.seq().tostring())
+                mut_seq = str.upper(str(mut.seq()))
                 if mut_seq in seq_set:
                     warnings.warn('Duplicate sequence found! Skipping.')
                     continue

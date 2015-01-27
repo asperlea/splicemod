@@ -146,8 +146,8 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
                          "{}/{}.fas".format(ccds_ex['exon'],
                                             ccds_ex['exon']))
                 seq_record = SeqIO.parse(fas_fn, 'fasta').next()
-                if str.upper(seq_record.seq.tostring()) not in seen_seqs:
-                    seen_seqs.add(str.upper(seq_record.seq.tostring()))
+                if str.upper(str(seq_record.seq)) not in seen_seqs:
+                    seen_seqs.add(str.upper(str(seq_record.seq)))
                 else:
                     print "\tDUPLICATE"
                 skip_exons[ccds_ex['exon']] = 1
@@ -298,7 +298,7 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
                     raise ValueError
             
             # check if an identical exon has been already seen
-            if str.upper(exon_record.seq.tostring()) in seen_seqs:
+            if str.upper(str(exon_record.seq)) in seen_seqs:
                 print " DUPLICATED"
                 counts['dup_seq'] += 1
                 raise ValueError 
@@ -326,7 +326,7 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
  
             # this writes all of our mutants to genbank and fasta files
             exon_record.save_all_mutants(gb=mutate_this, fas=True)
-            seen_seqs.add(str.upper(exon_record.seq.tostring()))
+            seen_seqs.add(str.upper(str(exon_record.seq)))
                         
         except ValueError:
             print "EXON {} SKIPPED".format(exon_record.id)
