@@ -104,7 +104,6 @@ def populate_attribs(self):
     
     #this will remove all old splicemod features so we can find new ones
     self.remove_annotations()
-    
     self.exon_list = []
     self.get_exon_list()
     self.correct_motifs = []
@@ -295,7 +294,6 @@ def remove_annotations(self):
     '''
     
     new_features = []
-
     for feat in self.features:
         if not is_splicemod_motif(feat):
             new_features.append(feat)
@@ -329,10 +327,8 @@ def find_motifs(self, seq_motif_type):
     '''associate successive n-mers with a motif_type object and add
     any found features to the record's feature list
     '''
-
     score_result_dict = \
         seq_motif_type.score(string.upper(str(self.seq)))
-    
 
     nmers = score_result_dict['nmers']
     locations = score_result_dict['locations']
@@ -348,9 +344,10 @@ def find_motifs(self, seq_motif_type):
     features = list()
         
     for i in range(len(locations)):
-        
+
         #skip this site if it doesn't match the motif's filter criteria
-        if not seq_motif_type.filter_score(scores[i]): continue
+        if not seq_motif_type.filter_score(scores[i]):
+            continue
         
         #if there is a context attrib, skip if it's not in the right context
         if 'context' in seq_motif_type.attribs:
@@ -370,7 +367,7 @@ def find_motifs(self, seq_motif_type):
                 acceptor_intron = interval([0, exons[0][0]])
                 if interval(locations[i]) not in acceptor_intron:
                     continue
-                
+
         start = locations[i][0]
         end = locations[i][1]
         
@@ -391,7 +388,7 @@ def find_motifs(self, seq_motif_type):
             feat.qualifiers['instance_name'] = names[i]
         
         features.append(feat)
-        
+
     self.features.extend(features)
 
 @util.magic_set(SeqRecord)
@@ -495,7 +492,7 @@ def consolidate_motifs(self, flist, mt):
             (flen, fsum, fcount, fmean, favg)
         
         #finally, make a new feature
-        feat = make_seq_feature(comp[0][0], comp[0][1], mt.type,
+        feat = make_seq_feature(int(comp[0][0]), int(comp[0][1]), mt.type,
             {'label'    :  [mt.type, ],
              'evidence' : str(favg),
              'note'     : [note_str, ],
@@ -570,7 +567,6 @@ def get_features(self, query, meta=False, aggregate=False, correct=None):
         returns an iterator on features given a certain query, a meta feature,
         a sequence motif type object, or a type string.
     '''    
-    
     #special cases for 'donor_intron' and 'acceptor_intron'
     if query == 'donor_intron':
         return ifilter(lambda f: len(self) in interval(f.extract_pos()),
@@ -608,14 +604,18 @@ def get_features(self, query, meta=False, aggregate=False, correct=None):
                             and f.qualifiers['seq_motif_type'] == q)
                             
     if not isinstance(query, str) and isinstance(query, collections.Iterable):
+        #print "a"
         recurse_this = lambda q: self.get_features(q, meta, aggregate, correct)
         iter = chain.from_iterable(map(recurse_this, query))
     
     elif isinstance(query, str):
+        #print "b"
         iter = ifilter(lambda f: sametype(f, query), self.features)
     elif isinstance(query, motif.SeqMotifType):
+        #print "c"
         iter = ifilter(lambda f: sametype(f, query.type), self.features)
     elif isinstance(query, SeqFeature) and query.qualifiers['meta'] == True:
+        #print "d"
         iter = self._consolidated[f.qualifiers['seq_motif_type']][query]
     else:
         raise GetFeaturesQueryUnknownType
@@ -629,6 +629,7 @@ def wig_for_feature(self, track, feat):
     if feat not in self.features:
         raise FeatureNotFoundInSeqRecordException
     loc = feat.extract_pos()
+
     return self.wigs[track][slice(*loc)]
 
 @util.magic_set(SeqRecord)
@@ -911,7 +912,7 @@ def save_all_mutants(self, gb=True, fas=True):
         seqrec_fas.write(self.format('fasta'))
         
     for mut_cat, mf_dict in self.mutants.items():
-        for feat_name, mut_list in mf_dict.items(): 
+        for feat_name, mut_list in mf_dict.items():
             for mut in mut_list:
                 
                 mut_seq = str.upper(mut.seq().tostring())
@@ -920,7 +921,6 @@ def save_all_mutants(self, gb=True, fas=True):
                     continue
                 else:
                     seq_set.add(mut_seq)
-                
                 if gb:
                     seqrec_gbk = open(my_gbk_dir + self.id 
                                       + mut.fn() + '.gbk', 'w')

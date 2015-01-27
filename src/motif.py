@@ -308,16 +308,16 @@ class Wiggle:
         self.max_buffer = max_buffer
         
         glob_components = (wiggle_dir, '/', file_prefix, '*', file_suffix)
-        
+
         # put all files into a list
         gzlist = glob.glob(''.join(glob_components))
-        
+
         # associate files into a dict by chromosome name
         re_components = map(util.to_raw, glob_components)
         re_components[-2] = "(\w+)"
         
         pattern = re.compile(''.join(re_components))
-        
+
         self.fnames = \
             dict([(pattern.match(gzfile).group(1), gzfile) \
                   for gzfile in gzlist])
@@ -335,9 +335,9 @@ class Wiggle:
         self.chridx = {}
         for chr, fidxh in self.fidxhandles.items():
             self.chridx[chr] = [map(int, fl.split()) for fl in fidxh.readlines()]
-                        
+
         wiggle_tracks[name] = self
-    
+
     def get_region(self, chr, start, end):
         ''' we look through the chromosome index list and we pull out the 
             seek position we want by finding the closest chr pos (col 3) that

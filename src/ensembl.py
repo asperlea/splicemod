@@ -312,6 +312,7 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
                 #5.1 Get Statistics=============================================
                 exon_record.stats = stats.SRStats(exon_record)
                 stats_str = str(exon_record.stats)
+
                 # if this is the first stats str, print the header first
                 if stats_file.tell() == 0:
                     stats_file.write(exon_record.stats.header() + "\n")
@@ -355,7 +356,7 @@ def add_wiggle_data(exon_record):
             raise ValueError("Wiggle track not long enough")
             
         exon_record.add_wiggle_track(wig_tr.name, map(lambda v: v[4], values))
-    
+
 def make_seq_record(exon, skip_annotation=False):
     ''' use pycogent to grab the sequence for the exon's region, and create a 
         new seq record with all the bells and whistles. add in the predicted

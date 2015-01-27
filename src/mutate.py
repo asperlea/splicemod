@@ -218,13 +218,13 @@ class Mutant:
         return '\t'.join(fields)
     
     def new_record(self):
-        
+
         mut_record = copy(self.sr)
-        
+
         #convert the seq into a mutable seq if it is not already
         if not isinstance(mut_record.seq, MutableSeq):
             mut_record.seq = mut_record.seq.tomutable()
-            
+
         mut_record.seq[self.loc[0]:self.loc[1]] = self.str
         mut_record.populate_attribs()
         mut_record.features.append(self.tofeature())
@@ -243,7 +243,7 @@ class Mutant:
         return mut_record
     
     def gb(self):
-        
+
         return self.new_record().abridged_gb()
        
     def tofeature(self):

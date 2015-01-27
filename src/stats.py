@@ -86,14 +86,14 @@ class SRStats:
     #x here is a list of wig arrays for features, sr is seq features
     #TODO: MAKE THIS FOR ALL POTENTIAL TRACKS, NOT JUST MAMCONSERV
     wig_attribs = OrderedDict([
-        ('cnsv_avg'   , lambda sr, x: np.mean([fl for fl in chain(*x)])),
+        ('cnsv_avg'   , lambda sr, x: np.mean([fl for fl in chain(*x)]) if (len(list(chain(*x))) > 0) else 0),
         ('cnsv_f_max' , lambda sr, x: util.max_none(np.mean(f) for f in x))
         ])
     
     CALL_STATS['wig'] = (list(chain(sorted(motif.motif_types.values()),\
                                ('exon','intron'))),
                          wig_attribs,
-                         lambda sr, x: (sr,sr.wigs_for_ftype(x,'MamConserv')))
+                         lambda sr, x: (sr, sr.wigs_for_ftype(x,'MamConserv')))
     
     #===========================================================================
     #SNP STATS
@@ -128,17 +128,16 @@ class SRStats:
         for stat_group in SRStats.CALL_STATS:
             stat_actions = SRStats.CALL_STATS[stat_group]
             oloop_list, fxn_odict, get_st_fxn = stat_actions
-            
+
             self._stats_odict[stat_group] = OrderedDict()
-            
             for i in oloop_list:
                 self._stats_odict[stat_group][str(i)] = OrderedDict()
-                
+
                 for st in fxn_odict:
                     lambda_args = get_st_fxn(sr,i)
                     self._stats_odict[stat_group][str(i)][str(st)] = \
                         fxn_odict[st](*lambda_args)
-    
+
     def __getitem__(self,*args):
         return self._stats_odict.__getitem__(*args)
     
