@@ -120,9 +120,6 @@ class SeqMotifType:
             
             self.score = self.pfm
             print "Motif matrices done."
-
-                
-            
                 
         #------------------------------------------------
         # SECOND: parse filter score information.
@@ -297,20 +294,33 @@ class Wiggle:
     done
     
     (10/28/12 - thanks self from one year ago for writing this down!)
+
+    Adriana 2015 update:
+    hg38 data has all the chromosomes in the same file so before using the bash
+    one liner above do:
+
+    Unzip the hg38 data
+    Run wigSplitByChr from python_utils on it: python wigSplitByChr path_to_hg38_file
+    Zip all the .wigFix files: for wig in *.wigFix; do gzip $wig; done
+    Run the bash one liner from above to create the .idx files.
+
+    Also, these comments are nice but at some point I should get around to
+    writing some proper documentation.
     '''
     
     def __init__(self, name, wiggle_dir, file_prefix,
                  file_suffix, max_buffer=50):
-        
+        print "Creating Wiggle tracks"
         self.name = name
         
         self.lookback_buffers = {}
         self.max_buffer = max_buffer
         
-        glob_components = (wiggle_dir, '/', file_prefix, '*', file_suffix)
+        glob_components = (wiggle_dir, '/', file_prefix, "*", file_suffix) #(wiggle_dir, '/', file_prefix, '*', file_suffix)
 
         # put all files into a list
         gzlist = glob.glob(''.join(glob_components))
+        print ''.join(glob_components)
 
         # associate files into a dict by chromosome name
         re_components = map(util.to_raw, glob_components)
@@ -332,8 +342,10 @@ class Wiggle:
                   for chr, fn in self.idxnames.items()])
         
         # load the indices into a dict of chrs
+        print "Loading the indices into a dict of chrs"
         self.chridx = {}
         for chr, fidxh in self.fidxhandles.items():
+            print "chr = ", chr
             self.chridx[chr] = [map(int, fl.split()) for fl in fidxh.readlines()]
 
         wiggle_tracks[name] = self
@@ -500,9 +512,9 @@ agg_types = ['Ke2011']
 
 MamConserv = Wiggle(name='MamConserv',
                         wiggle_dir='/Users/adriana/Sri Kosuri Rotation Project/Wiggle/' + \
-                                    'placentalMammals',
+                                    'hg38',
                         file_prefix='chr',
-                        file_suffix='.phyloP46way.placental.wigFix.gz')
+                        file_suffix='.phyloP7way.wigFix.gz')
                         
         
 
