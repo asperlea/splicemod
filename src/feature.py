@@ -333,7 +333,7 @@ def find_motifs(self, seq_motif_type):
     nmers = score_result_dict['nmers']
     locations = score_result_dict['locations']
     scores = score_result_dict['scores']
-    
+
     #names list is only given by some score types:
     if 'names' in score_result_dict:
         names = score_result_dict['names']

@@ -1,5 +1,6 @@
 import MySQLdb
 from interval import interval
+import multiprocessing as mp
 from cogent.db.ensembl import HostAccount, Genome
 # import cProfile
 
@@ -42,6 +43,236 @@ def type_me(str):
     try: return ast.literal_eval(str) 
     except: return str
 
+def process_exons(all_exons, counts, seen_seqs, skip_exons, overlap_exons, exon_dict_keys,
+                  sample_indices, synth_size, us_min, ds_min, intron_padding, max_spot,
+                  exon_len_file, stats_file):
+    for i, ccds_ex in all_exons:
+        #------------------------------------------------------------------
+        # 0. Keep time, running count, print every 50 exons
+        #------------------------------------------------------------------
+
+        counts['total'] += 1
+
+        if counts['total'] > 0 and not (counts['total'] % 50):
+            print "Finished %d exons..." % (counts['total'])
+            for key in counts.keys():
+                print "\t%s:\t%d" % (key, counts[key])
+
+
+        #------------------------------------------------------------------
+        # 1. Prepare CCDS_Ex exon record
+        #------------------------------------------------------------------
+
+        # if we are taking records from a file instead of mysql, then
+        # split,map,zip into a dict
+        ccds_ex = map(type_me, ccds_ex.split())
+        ccds_ex = dict(zip(exon_dict_keys, ccds_ex))
+
+        ccds_ex['invalid'] = 0
+        ccds_ex['class'] = []
+        ccds_ex['subsumed'] = []
+        ccds_ex['identical'] = []
+
+        #------------------------------------------------------------------
+        # 2. Skip if this exon has been seen before and is
+        #     subsumed, overlapped, or identical
+        #------------------------------------------------------------------
+
+        # if 'ENSE00001316627' not in ccds_ex['exon']: continue
+
+        for fg in glob.glob(cfg.ens_fas_dir + '*'):
+            if ccds_ex['exon'] in fg:
+                print ccds_ex['exon'] + "\tPRESENT"
+                fas_fn = (cfg.ens_fas_dir +
+                         "{}/{}.fas".format(ccds_ex['exon'],
+                                            ccds_ex['exon']))
+                seq_record = SeqIO.parse(fas_fn, 'fasta').next()
+                if str.upper(str(seq_record.seq)) not in seen_seqs:
+                    seen_seqs[str.upper(str(seq_record.seq))] = True
+                else:
+                    print "\tDUPLICATE"
+                skip_exons[ccds_ex['exon']] = 1
+
+
+        if ccds_ex['exon'] in skip_exons:
+            print ccds_ex['exon'] + "\tIDENTICAL"
+            counts['skip_identical_subsumed'] += 1
+            continue
+
+        if ccds_ex['exon'] in overlap_exons:
+            counts['skip_overlap'] += 1
+            continue
+
+        #------------------------------------------------------------------
+        # 3. Get Region To Synthesize
+        #------------------------------------------------------------------
+
+        # synth_size is region to make, not counting primers/RE sites
+        # us_min and ds_min are upstream and downstream minimums
+
+        # skip if the exon plus us_min and ds_min is too large
+        min_synth_size = ccds_ex['len'] + us_min + ds_min
+        if min_synth_size > synth_size:
+            counts['skip_size'] += 1
+            continue
+
+        synth_remainder, odd = divmod(synth_size - min_synth_size, 2)
+
+        # if the exon is on strand -1, then we need to switch us and ds
+        if ccds_ex['strand'] == 1:
+            synth_us = us_min + synth_remainder + odd
+            synth_ds = ds_min + synth_remainder
+        else:  # opposite strand, switch us and ds
+            synth_us = ds_min + synth_remainder
+            synth_ds = us_min + synth_remainder + odd
+
+        synth_region = dict()
+        synth_region['chr'] = ccds_ex['chr']
+        synth_region['start'] = ccds_ex['start'] - synth_us - 51
+        synth_region['end'] = ccds_ex['end'] + synth_ds + 51
+
+        ccds_ex['synth_start'] = ccds_ex['start'] - synth_us
+        ccds_ex['synth_end'] = ccds_ex['end'] + synth_ds
+        ccds_ex['synth_us'] = synth_us
+        ccds_ex['synth_ds'] = synth_ds
+
+        #------------------------------------------------------------------
+        # 3. Find Exons that Exist in This Region
+        #------------------------------------------------------------------
+        for re_ex in get_exons_in_region(*get_region(synth_region)):
+
+            re_ex['invalid'] = False
+            re_ex['class'] = 'error'
+
+            # region exon (this loop)
+            re_ivl = interval[re_ex['start'], re_ex['end']]
+            # ccds exon (outer loop exon)
+            ce_ivl = interval[ccds_ex['start'], ccds_ex['end']]
+            # synthesized region
+            sr_ivl = interval[synth_region['start'], synth_region['end']]
+            # flanking synthesized region
+            fr_ivl = sr_ivl + interval(-50, 50)
+
+            isiz = lambda ivl: ivl[0][1] - ivl[0][0]
+
+            # look for situations that we want to avoid
+            #3.1 CCDS Identical=================================================
+            # exons that have the same start and end
+            if re_ivl == ce_ivl:
+                re_ex['class'] = 'identical'
+                skip_exons[re_ex['exon']] = 1
+                ccds_ex['identical'].append(re_ex['exon'])
+                re_ex['invalid'] = False
+            #3.2 CCDS Subsumes==================================================
+            # exons that this exon subsumes
+            # starts and ends inside of exon
+            elif re_ivl in ce_ivl:
+                re_ex['class'] = 'subsumes'
+                skip_exons[re_ex['exon']] = 1
+                ccds_ex['subsumed'].append(re_ex['exon'])
+                re_ex['invalid'] = False
+            #3.3 CCDS is Subsumed===============================================
+            # exons that subsume this exon:
+            #  starts and ends outside of exon
+            elif ce_ivl in re_ivl:
+                re_ex['class'] = 'subsumed'
+                re_ex['invalid'] = True
+            #3.4 Exon Overlap===================================================
+            # exons that overlap this exon:
+            # starts in middle, ends after or ends in middle, starts after
+            elif (re_ivl[0][0] in ce_ivl and re_ivl[0][1] > ce_ivl[0][1])  \
+               or (re_ivl[0][1] in ce_ivl and re_ivl[0][0] < ce_ivl[0][0]):
+                re_ex['class'] = 'overlapped'
+                re_ex['invalid'] = True
+                overlap_exons[re_ex['exon']] = 1
+            #3.5 Invasion=======================================================
+            # exons that invade this exon's synthesized region
+            elif re_ivl[0][0] in sr_ivl or re_ivl[0][1] in sr_ivl:
+                re_ex['class'] = 'invaded'
+                re_ex['invalid'] = True
+            #3.6 Flank Invasion=================================================
+            # exons whose flanks (50 bases) invade this exon's
+            # synthesized region
+            elif re_ivl[0][0] in fr_ivl or re_ivl[0][1] in fr_ivl:
+                re_ex['class'] = 'flank_invaded'
+                re_ex['invalid'] = True
+            #===================================================================
+
+            # FINALLY: outer loop exon invalid if subsumed, overlapped, invaded
+            if re_ex['invalid']:
+                ccds_ex['invalid'] = True
+                ccds_ex['class'].append(re_ex['class'])
+
+        # update class counts
+        for exclass in ccds_ex['class']:
+            if exclass in counts:
+                counts[exclass] += 1
+            else:
+                counts[exclass] = 1
+
+        # skip ccds exon if invalid
+        if not ccds_ex['invalid']:
+            counts['valid'] += 1
+            print "%s\tOK" % ccds_ex['exon']
+        else:
+            counts['invalid'] += 1
+            print "%s\t%s" % (ccds_ex['exon'], ccds_ex['class'])
+            continue
+
+        try:
+            # only annotate & mutate if this exon is in the sample_indices set
+            mutate_this = i in sample_indices
+
+            #-------------------------------------------------------------------
+            # 4. Get Seq Features and SNPs
+            #-------------------------------------------------------------------
+            # finally, make our exon into a bonafide splicemod SeqRecord
+            exon_record = make_seq_record(ccds_ex,
+                                          skip_annotation=not mutate_this)
+            exon_len_file.write(str(ccds_ex['len']) + '\n')
+
+            # check for cut sites
+            for cs in cfg.cut_sites:
+                if cs in exon_record.seq:
+                    print " HAS {}".format(cs)
+                    counts['cut_sites'] += 1
+                    raise ValueError
+
+            # check if an identical exon has been already seen
+            if str.upper(str(exon_record.seq)) in seen_seqs:
+                print " DUPLICATED"
+                counts['dup_seq'] += 1
+                raise ValueError
+
+            #-------------------------------------------------------------------
+            # 5. Make a list of mutants from MutantCategories
+            #-------------------------------------------------------------------
+            # make an attribute to store mutants in this seq record
+            exon_record.mutants = {}
+            if mutate_this:
+                #5.1 Get Statistics=============================================
+                exon_record.stats = stats.SRStats(exon_record)
+                stats_str = str(exon_record.stats)
+
+                # if this is the first stats str, print the header first
+                if stats_file.tell() == 0:
+                    stats_file.write(exon_record.stats.header() + "\n")
+                stats_file.write(stats_str + "\n")
+                #5.2 Generate Mutants===========================================
+                exon_record.generate_all_mutants()
+
+            #------------------------------------------------------------------
+            # 6. Save to FASTA and GBK formats
+            #------------------------------------------------------------------
+
+            # this writes all of our mutants to genbank and fasta files
+            exon_record.save_all_mutants(gb=mutate_this, fas=True)
+            if str.upper(str(exon_record.seq)) not in seen_seqs:
+                seen_seqs[str.upper(str(exon_record.seq))] = True
+
+        except ValueError:
+            print "EXON {} SKIPPED".format(exon_record.id)
+
 def categorize_exons(synth_size=cfg.chip_synth_length,
                      us_min=cfg.chip_us_min,
                      ds_min=cfg.chip_ds_min,
@@ -71,9 +302,16 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
     # open files
     exon_file = open(cfg.ens_exon_fn)
     stats_file = open(cfg.ens_exon_stats, 'w')
+    exon_len_file = open(cfg.exonLenFile, 'w')
+
+    # set up multiprocessing manager
+    manager = mp.Manager()
+
+    # set up list that will hold processes for each exon
+    process_list = []
             
     # set up counts dict
-    counts = dict()
+    counts = manager.dict()
     counts['skip_size'] = 0
     counts['valid'] = 0
     counts['invalid'] = 0
@@ -85,10 +323,10 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
     
     # keep track of all 170mers
     
-    seen_seqs = set()
+    seen_seqs = manager.dict() # this should really be a set, but manager does not have a set()
     
-    skip_exons = dict()  # list of exons to skip due to copies or being subsumed
-    overlap_exons = dict()  # list of exons to skip due to being overlapped
+    skip_exons = manager.dict()  # list of exons to skip due to copies or being subsumed
+    overlap_exons = manager.dict()  # list of exons to skip due to being overlapped
     
     exon_dict_keys = exon_file.readline().split()
     
@@ -99,244 +337,37 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
     # get random sample to perform mutations on
     random.seed(1)
     sample_indices = sorted(random.sample(range(len(all_exons)),
-                            number_to_mutate)) 
-        
-    # \/ if we want to get them from mySQL        
-    # for i, ccds_ex in enumerate(get_ccds_exons(synth_size - us_min - ds_min)):
-    # \/ if we want to get them from a file  
-    for i, ccds_ex in enumerate(all_exons):
+                            number_to_mutate))
 
-        #------------------------------------------------------------------
-        # 0. Keep time, running count, print every 50 exons
-        #------------------------------------------------------------------
-      
-        counts['total'] += 1
-                
-        if counts['total'] > 0 and not (counts['total'] % 50):  
-            print "Finished %d exons..." % (counts['total'])
-            for key in counts.keys():
-                print "\t%s:\t%d" % (key, counts[key])
-        
-        
-        #------------------------------------------------------------------
-        # 1. Prepare CCDS_Ex exon record
-        #------------------------------------------------------------------
-        
-        # if we are taking records from a file instead of mysql, then
-        # split,map,zip into a dict         
-        ccds_ex = map(type_me, ccds_ex.split())
-        ccds_ex = dict(zip(exon_dict_keys, ccds_ex))
-        
-        ccds_ex['invalid'] = 0
-        ccds_ex['class'] = []
-        ccds_ex['subsumed'] = []
-        ccds_ex['identical'] = []
+    # split up exons across all CPUs; this is faster than spawning a process for every exon
+    # because OS has to do a lot less context switching
+    num_cpus = mp.cpu_count()
+    exons_per_cpu, rem = divmod(len(all_exons), num_cpus)
+    if rem != 0: 
+        exons_per_cpu += 1
 
-        #------------------------------------------------------------------
-        # 2. Skip if this exon has been seen before and is 
-        #     subsumed, overlapped, or identical
-        #------------------------------------------------------------------
-        
-        # if 'ENSE00001316627' not in ccds_ex['exon']: continue
-        
-        for fg in glob.glob(cfg.ens_fas_dir + '*'):
-            if ccds_ex['exon'] in fg:
-                print ccds_ex['exon'] + "\tPRESENT"
-                fas_fn = (cfg.ens_fas_dir + 
-                         "{}/{}.fas".format(ccds_ex['exon'],
-                                            ccds_ex['exon']))
-                seq_record = SeqIO.parse(fas_fn, 'fasta').next()
-                if str.upper(str(seq_record.seq)) not in seen_seqs:
-                    seen_seqs.add(str.upper(str(seq_record.seq)))
-                else:
-                    print "\tDUPLICATE"
-                skip_exons[ccds_ex['exon']] = 1
-            
-        
-        if ccds_ex['exon'] in skip_exons:
-            print ccds_ex['exon'] + "\tIDENTICAL"
-            counts['skip_identical_subsumed'] += 1
-            continue
-        
-        if ccds_ex['exon'] in overlap_exons:
-            counts['skip_overlap'] += 1
-            continue
+    for idx in range(0, len(all_exons), exons_per_cpu):
+         # \/ if we want to get them from mySQL
+        #for i, ccds_ex in enumerate(get_ccds_exons(synth_size - us_min - ds_min)):
+        # \/ if we want to get them from a file
+        p = mp.Process(target=process_exons, args=(enumerate(all_exons[idx:idx + exons_per_cpu]), counts, seen_seqs,
+                                                   skip_exons, overlap_exons, exon_dict_keys, sample_indices, synth_size,
+                                                    us_min, ds_min, intron_padding, max_spots, exon_len_file, stats_file))
+        process_list.append(p)
+        p.start()
 
-        #------------------------------------------------------------------
-        # 3. Get Region To Synthesize
-        #------------------------------------------------------------------
-
-        # synth_size is region to make, not counting primers/RE sites
-        # us_min and ds_min are upstream and downstream minimums
-        
-        # skip if the exon plus us_min and ds_min is too large
-        min_synth_size = ccds_ex['len'] + us_min + ds_min
-        if min_synth_size > synth_size:
-            counts['skip_size'] += 1
-            continue
-        
-        synth_remainder, odd = divmod(synth_size - min_synth_size, 2) 
-        
-        # if the exon is on strand -1, then we need to switch us and ds
-        if ccds_ex['strand'] == 1:
-            synth_us = us_min + synth_remainder + odd
-            synth_ds = ds_min + synth_remainder
-        else:  # opposite strand, switch us and ds
-            synth_us = ds_min + synth_remainder
-            synth_ds = us_min + synth_remainder + odd
-                    
-        synth_region = dict()
-        synth_region['chr'] = ccds_ex['chr']
-        synth_region['start'] = ccds_ex['start'] - synth_us - 51
-        synth_region['end'] = ccds_ex['end'] + synth_ds + 51
-        
-        ccds_ex['synth_start'] = ccds_ex['start'] - synth_us
-        ccds_ex['synth_end'] = ccds_ex['end'] + synth_ds
-        ccds_ex['synth_us'] = synth_us
-        ccds_ex['synth_ds'] = synth_ds
-        
-        #------------------------------------------------------------------
-        # 3. Find Exons that Exist in This Region
-        #------------------------------------------------------------------
-        
-        for re_ex in get_exons_in_region(*get_region(synth_region)):
-            
-            re_ex['invalid'] = False
-            re_ex['class'] = 'error'
-            
-            # region exon (this loop)
-            re_ivl = interval[re_ex['start'], re_ex['end']]
-            # ccds exon (outer loop exon)
-            ce_ivl = interval[ccds_ex['start'], ccds_ex['end']]
-            # synthesized region
-            sr_ivl = interval[synth_region['start'], synth_region['end']]
-            # flanking synthesized region
-            fr_ivl = sr_ivl + interval(-50, 50)
-            
-            isiz = lambda ivl: ivl[0][1] - ivl[0][0]
-
-            # look for situations that we want to avoid
-            #3.1 CCDS Identical=================================================
-            # exons that have the same start and end
-            if re_ivl == ce_ivl:
-                re_ex['class'] = 'identical'
-                skip_exons[re_ex['exon']] = 1
-                ccds_ex['identical'].append(re_ex['exon'])
-                re_ex['invalid'] = False                
-            #3.2 CCDS Subsumes==================================================
-            # exons that this exon subsumes
-            # starts and ends inside of exon
-            elif re_ivl in ce_ivl:
-                re_ex['class'] = 'subsumes'
-                skip_exons[re_ex['exon']] = 1
-                ccds_ex['subsumed'].append(re_ex['exon'])
-                re_ex['invalid'] = False                
-            #3.3 CCDS is Subsumed===============================================
-            # exons that subsume this exon:
-            #  starts and ends outside of exon
-            elif ce_ivl in re_ivl:
-                re_ex['class'] = 'subsumed'
-                re_ex['invalid'] = True
-            #3.4 Exon Overlap===================================================
-            # exons that overlap this exon:
-            # starts in middle, ends after or ends in middle, starts after
-            elif (re_ivl[0][0] in ce_ivl and re_ivl[0][1] > ce_ivl[0][1])  \
-               or (re_ivl[0][1] in ce_ivl and re_ivl[0][0] < ce_ivl[0][0]):
-                re_ex['class'] = 'overlapped'
-                re_ex['invalid'] = True
-                overlap_exons[re_ex['exon']] = 1 
-            #3.5 Invasion=======================================================
-            # exons that invade this exon's synthesized region
-            elif re_ivl[0][0] in sr_ivl or re_ivl[0][1] in sr_ivl:
-                re_ex['class'] = 'invaded'
-                re_ex['invalid'] = True      
-            #3.6 Flank Invasion=================================================
-            # exons whose flanks (50 bases) invade this exon's 
-            # synthesized region
-            elif re_ivl[0][0] in fr_ivl or re_ivl[0][1] in fr_ivl:
-                re_ex['class'] = 'flank_invaded'
-                re_ex['invalid'] = True                   
-            #===================================================================
-            
-            # FINALLY: outer loop exon invalid if subsumed, overlapped, invaded                        
-            if re_ex['invalid']:
-                ccds_ex['invalid'] = True
-                ccds_ex['class'].append(re_ex['class'])
-            
-        # update class counts                
-        for exclass in ccds_ex['class']:    
-            if exclass in counts:
-                counts[exclass] += 1
-            else:
-                counts[exclass] = 1
-                
-        # skip ccds exon if invalid
-        if not ccds_ex['invalid']: 
-            counts['valid'] += 1
-            print "%s\tOK" % ccds_ex['exon']
-        else:
-            counts['invalid'] += 1
-            print "%s\t%s" % (ccds_ex['exon'], ccds_ex['class'])
-            continue
-        
-        try:
-            # only annotate & mutate if this exon is in the sample_indices set
-            mutate_this = i in sample_indices
-            
-            #-------------------------------------------------------------------
-            # 4. Get Seq Features and SNPs
-            #-------------------------------------------------------------------
-            # finally, make our exon into a bonafide splicemod SeqRecord
-            exon_record = make_seq_record(ccds_ex,
-                                          skip_annotation=not mutate_this)
-                        
-            # check for cut sites
-            for cs in cfg.cut_sites:
-                if cs in exon_record.seq:
-                    print " HAS {}".format(cs)                    
-                    counts['cut_sites'] += 1
-                    raise ValueError
-            
-            # check if an identical exon has been already seen
-            if str.upper(str(exon_record.seq)) in seen_seqs:
-                print " DUPLICATED"
-                counts['dup_seq'] += 1
-                raise ValueError 
-                
-            #-------------------------------------------------------------------
-            # 5. Make a list of mutants from MutantCategories
-            #-------------------------------------------------------------------
-            # make an attribute to store mutants in this seq record
-            exon_record.mutants = {}
-            if mutate_this:
-                #5.1 Get Statistics=============================================
-                exon_record.stats = stats.SRStats(exon_record)
-                stats_str = str(exon_record.stats)
-
-                # if this is the first stats str, print the header first
-                if stats_file.tell() == 0:
-                    stats_file.write(exon_record.stats.header() + "\n")
-                stats_file.write(stats_str + "\n")
-                #5.2 Generate Mutants===========================================
-                exon_record.generate_all_mutants()
-
-            #------------------------------------------------------------------
-            # 6. Save to FASTA and GBK formats
-            #------------------------------------------------------------------
- 
-            # this writes all of our mutants to genbank and fasta files
-            exon_record.save_all_mutants(gb=mutate_this, fas=True)
-            seen_seqs.add(str.upper(str(exon_record.seq)))
-                        
-        except ValueError:
-            print "EXON {} SKIPPED".format(exon_record.id)
+    for process in process_list:
+        process.join()
 
     #---------------------------------------------------------------------------
     # Print final counts at the end:        
     print "Final Counts:\n"
     for key in counts.keys():   
         print "F\t%s:\t%d" % (key, counts[key])
-    
+
+    # Close files
+    exon_len_file.close()
+    stats_file.close()
 
 def add_wiggle_data(exon_record):
     ''' sequentially add wiggle track information to exons. Because I am reading
@@ -423,7 +454,7 @@ def make_seq_record(exon, skip_annotation=False):
         record.populate_attribs()
         add_wiggle_data(record)
         record.add_conservation_features()
-    
+
     return record
     
 def get_exons_in_region(chr, region_start, region_end):

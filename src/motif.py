@@ -310,7 +310,6 @@ class Wiggle:
     
     def __init__(self, name, wiggle_dir, file_prefix,
                  file_suffix, max_buffer=50):
-        print "Creating Wiggle tracks"
         self.name = name
         
         self.lookback_buffers = {}
@@ -320,7 +319,6 @@ class Wiggle:
 
         # put all files into a list
         gzlist = glob.glob(''.join(glob_components))
-        print ''.join(glob_components)
 
         # associate files into a dict by chromosome name
         re_components = map(util.to_raw, glob_components)
@@ -342,10 +340,8 @@ class Wiggle:
                   for chr, fn in self.idxnames.items()])
         
         # load the indices into a dict of chrs
-        print "Loading the indices into a dict of chrs"
         self.chridx = {}
         for chr, fidxh in self.fidxhandles.items():
-            print "chr = ", chr
             self.chridx[chr] = [map(int, fl.split()) for fl in fidxh.readlines()]
 
         wiggle_tracks[name] = self

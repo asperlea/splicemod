@@ -20,6 +20,9 @@ topDir = os.getcwd() + '/'
 logFile = ('%s/parseFASTA.log' % topDir)
 # not currently used
 
+# extra stats files (might be used to generate figures)
+exonLenFile = topDir + "exonLengths.txt"
+
 #####maxEnt Settings
 maxEntPath = topDir + "perl_utils/max_ent"
 # path to maxEnt executable
