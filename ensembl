@@ -1,0 +1,3 @@
+rm -r ../splicemod_data/fas
+rm -r ../splicemod_data/gbk
+python src/ensembl.py

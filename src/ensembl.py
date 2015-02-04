@@ -343,7 +343,7 @@ def categorize_exons(synth_size=cfg.chip_synth_length,
     # because OS has to do a lot less context switching
     num_cpus = mp.cpu_count()
     exons_per_cpu, rem = divmod(len(all_exons), num_cpus)
-    if rem != 0: 
+    if rem != 0:
         exons_per_cpu += 1
 
     for idx in range(0, len(all_exons), exons_per_cpu):
