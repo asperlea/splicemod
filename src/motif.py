@@ -362,7 +362,7 @@ class Wiggle:
         end += 2
         
         next_idx_line = 0
-        while (self.chridx[chr][next_idx_line][2] < start) and (next_idx_line < len(self.chridx[chr] - 2)):
+        while (self.chridx[chr][next_idx_line][2] < start) and (next_idx_line < len(self.chridx[chr]) - 2):
             next_idx_line += 1
         
         if next_idx_line < 1: raise ValueError("START not in wiggle file")
