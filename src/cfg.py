@@ -194,7 +194,7 @@ chip_ds_min = 30
 # there must be this much intronic space before/after exon
 chip_intron_padding = 50
 # number of exons to choose (randomly) to mutate
-chip_number_to_mutate = 305
+chip_number_to_mutate = 500
 
 
 

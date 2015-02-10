@@ -230,6 +230,9 @@ def process_exons(all_exons, counts, seen_seqs, skip_exons, overlap_exons, exon_
             exon_record = make_seq_record(ccds_ex,
                                           skip_annotation=not mutate_this)
             exon_len_file.write(str(ccds_ex['len']) + '\n')
+            if ccds_ex['len'] > 1000:
+                print "WTF": ccds_ex
+                exit(0)
 
             # check for cut sites
             for cs in cfg.cut_sites:
