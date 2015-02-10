@@ -46,8 +46,8 @@
       <file leaf-file-name="cutEnds.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/python_utils/cutEnds.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4351145" vertical-offset="0" max-vertical-offset="655">
-              <caret line="19" column="6" selection-start-line="19" selection-start-column="6" selection-end-line="19" selection-end-column="6" />
+            <state vertical-scroll-proportion="0.41221374" vertical-offset="0" max-vertical-offset="655">
+              <caret line="18" column="84" selection-start-line="18" selection-start-column="84" selection-end-line="18" selection-end-column="84" />
               <folding />
             </state>
           </provider>
@@ -905,8 +905,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/python_utils/cutEnds.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4351145" vertical-offset="0" max-vertical-offset="655">
-          <caret line="19" column="6" selection-start-line="19" selection-start-column="6" selection-end-line="19" selection-end-column="6" />
+        <state vertical-scroll-proportion="0.41221374" vertical-offset="0" max-vertical-offset="655">
+          <caret line="18" column="84" selection-start-line="18" selection-start-column="84" selection-end-line="18" selection-end-column="84" />
           <folding />
         </state>
       </provider>
