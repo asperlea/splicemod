@@ -10,12 +10,15 @@ def main():
     outFile = open(sys.argv[2], "w")
 
     oligoLengths = []
+    idx = 1
     for line in inFile:
         cleanLine = line.strip()
         pos = cleanLine.find("TTAATTAA")
         oligo = cleanLine[:pos]
+        outFile.write(">oligo" + str(idx) + "\n")
         outFile.write(oligo + "\n")
         oligoLengths.append(len(oligo))
+        idx += 1
     print "Average oligo length was: ", sum(oligoLengths) / float(len(oligoLengths))
 
     outFile.close()
