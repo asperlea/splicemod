@@ -26,29 +26,21 @@
       <file leaf-file-name="mutate.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/mutate.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="17145" max-vertical-offset="29115">
+            <state vertical-scroll-proportion="0.0" vertical-offset="16740" max-vertical-offset="28710">
               <caret line="1143" column="12" selection-start-line="1143" selection-start-column="12" selection-end-line="1143" selection-end-column="12" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ensembl.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ensembl.py">
+      <file leaf-file-name="PEARtobowtie.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/python_utils/PEARtobowtie.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-9.5" vertical-offset="2993" max-vertical-offset="8655">
-              <caret line="219" column="20" selection-start-line="219" selection-start-column="20" selection-end-line="219" selection-end-column="20" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="cutEnds.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/python_utils/cutEnds.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.45801526" vertical-offset="0" max-vertical-offset="655">
-              <caret line="20" column="16" selection-start-line="20" selection-start-column="16" selection-end-line="20" selection-end-column="16" />
-              <folding />
+            <state vertical-scroll-proportion="0.7300885" vertical-offset="0" max-vertical-offset="678">
+              <caret line="33" column="5" selection-start-line="33" selection-start-column="5" selection-end-line="33" selection-end-column="5" />
+              <folding>
+                <element signature="e#24#34#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -146,6 +138,7 @@
         <option value="$PROJECT_DIR$/python_utils/plot.py" />
         <option value="$PROJECT_DIR$/src/ensembl.py" />
         <option value="$PROJECT_DIR$/python_utils/cutEnds.py" />
+        <option value="$PROJECT_DIR$/python_utils/PEARtobowtie.py" />
       </list>
     </option>
   </component>
@@ -863,14 +856,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/mutate.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="17145" max-vertical-offset="29115">
-          <caret line="1143" column="12" selection-start-line="1143" selection-start-column="12" selection-end-line="1143" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/motif.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="4913" max-vertical-offset="7635">
@@ -897,17 +882,27 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ensembl.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-9.5" vertical-offset="2993" max-vertical-offset="8655">
-          <caret line="219" column="20" selection-start-line="219" selection-start-column="20" selection-end-line="219" selection-end-column="20" />
+        <state vertical-scroll-proportion="0.21779141" vertical-offset="2993" max-vertical-offset="8655">
+          <caret line="212" column="30" selection-start-line="212" selection-start-column="30" selection-end-line="212" selection-end-column="30" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/python_utils/cutEnds.py">
+    <entry file="file://$PROJECT_DIR$/src/mutate.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.45801526" vertical-offset="0" max-vertical-offset="655">
-          <caret line="20" column="16" selection-start-line="20" selection-start-column="16" selection-end-line="20" selection-end-column="16" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="17145" max-vertical-offset="29115">
+          <caret line="1143" column="12" selection-start-line="1143" selection-start-column="12" selection-end-line="1143" selection-end-column="12" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/python_utils/PEARtobowtie.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.7300885" vertical-offset="0" max-vertical-offset="678">
+          <caret line="33" column="5" selection-start-line="33" selection-start-column="5" selection-end-line="33" selection-end-column="5" />
+          <folding>
+            <element signature="e#24#34#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
