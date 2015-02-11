@@ -10,6 +10,7 @@ def main():
     inFile = open(sys.argv[1], "r") # fastq file
     outFile = open(sys.argv[2], "w")
 
+    oligoLengths = []
     while True:
         next_4_lines = list(islice(inFile, 4))
         if not next_4_lines:
@@ -18,7 +19,6 @@ def main():
         sequence = next_4_lines[1]
         quality = next_4_lines[3]
 
-        oligoLengths = []
         pos = sequence.find("TTAATTAA")
         sequence = sequence[:pos]
         quality = quality[:pos]
@@ -29,7 +29,7 @@ def main():
         outFile.write(quality)
 
         oligoLengths.append(len(sequence))
-        print "Average oligo length was: ", sum(oligoLengths) / float(len(oligoLengths))
+    print "Average oligo length was: ", sum(oligoLengths) / float(len(oligoLengths))
 
     outFile.close()
 
