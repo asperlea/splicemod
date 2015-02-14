@@ -14,11 +14,10 @@ def main():
     binContigsDicts = []
     for dirct in dirlist:
         print "dir = ", dirct
-        binContigsFile = open(dirct + "/perfects.txt")
+        binContigsFile = open(dirct + "/perfectSeqs.txt")
         binContigs = defaultdict(int)
         for line in binContigsFile:
-            data = line.split()
-            contig = data[9]
+            contig = line.strip()
             binContigs[contig] += 1
         binContigsDicts.append(binContigs)
 
@@ -34,7 +33,7 @@ def main():
         for binDict in binContigsDicts:
             counts = binDict[contig]
             countsPerBin.append(counts)
-        countsFile.write(contig)
+        countsFile.write(contig+"\n")
         countsFile.write(str(countsPerBin) + "\n")
     countsFile.close()
 

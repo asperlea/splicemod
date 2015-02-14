@@ -23,12 +23,13 @@ def main():
         sequence = sequence[:pos]
         quality = quality[:pos]
         
-        outFile.write(next_4_lines[0])
-        outFile.write(sequence + "\n")
-        outFile.write(next_4_lines[2])
-        outFile.write(quality + "\n")
-
-        oligoLengths.append(len(sequence))
+        if len(sequence) >= 100:
+            outFile.write(next_4_lines[0])
+            outFile.write(sequence + "\n")
+            outFile.write(next_4_lines[2])
+            outFile.write(quality + "\n")
+    
+            oligoLengths.append(len(sequence))
     print "Average oligo length was: ", sum(oligoLengths) / float(len(oligoLengths))
 
     outFile.close()
