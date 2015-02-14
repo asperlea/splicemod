@@ -22,11 +22,11 @@ def main():
         pos = sequence.find("TTAATTAA")
         sequence = sequence[:pos]
         quality = quality[:pos]
-
+        
         outFile.write(next_4_lines[0])
-        outFile.write(sequence)
-        outFile.write(next_4_lines[1])
-        outFile.write(quality)
+        outFile.write(sequence + "\n")
+        outFile.write(next_4_lines[2])
+        outFile.write(quality + "\n")
 
         oligoLengths.append(len(sequence))
     print "Average oligo length was: ", sum(oligoLengths) / float(len(oligoLengths))
