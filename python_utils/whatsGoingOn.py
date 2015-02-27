@@ -3,6 +3,20 @@ __author__ = 'adriana'
 import sys
 from collections import defaultdict
 
+def parseMDtag(MDtag):
+    MDtag = MDtag.split(":")[2]
+    num = 0
+    diff = 0
+    SNPS = []
+    for ch in MDtag:
+        if ch.isdigit():
+            diff = diff * 10 + int(ch)
+        else:
+            SNPS.append((num + diff, ch))
+            num += diff
+            diff = 0
+    return SNPS
+
 def main():
     readsFile = open(sys.argv[1], "r")
     alignmentFile = open(sys.argv[2], "r")
@@ -28,10 +42,22 @@ def main():
         count = int(line.split()[0])
 
         if count > 50 and len(read) == 170:
-            print read
+            natSNPS = parseMDtag(alignmentDict[read][exon]['1'])
+
+            if len(alignmentDict[read]) > 1:
+                print "GARBAGE READ"
+                continue
+
+            mutsInfo = []
             for exon in alignmentDict[read]:
-                print exon
                 for mutant in alignmentDict[read][exon]:
-                    print mutant, alignmentDict[read][exon][mutant]
+                    mutSNPS = parseMDtag(alignmentDict[read][exon][mutant])
+
+                    for natSNP in natSNPS:
+                        if natSNP not in mutSNPS:
+                            mutsInfo.append(mutant)
+                            break
+            print read
+            print mutsInfo
 
 main()
