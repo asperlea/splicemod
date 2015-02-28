@@ -4,8 +4,8 @@ import sys
 from collections import defaultdict
 
 def main():
-    readsFile = open("uniqReadsCoverage/10-22079066-reads.txt", "r")
-    alignmentFile = open("test_alignment_mut.txt", "r")
+    readsFile = open(sys.argv[1], "r")
+    alignmentFile = open(sys.argv[2], "r")
     numMaps = defaultdict(int)
 
     alignmentDict = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: "")))
@@ -27,7 +27,7 @@ def main():
         read = line.split()[1]
         count = int(line.split()[0])
 
-        if count > 50:
+        if count > 50 and len(read) == 170:
             print read
             for exon in alignmentDict[read]:
                 print exon
