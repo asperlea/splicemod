@@ -4,6 +4,7 @@ import sys
 from collections import defaultdict
 
 def parseMDtag(MDtag):
+    print MDtag
     MDtag = MDtag.split(":")[2]
     num = 0
     diff = 0
@@ -18,8 +19,8 @@ def parseMDtag(MDtag):
     return SNPS
 
 def main():
-    readsFile = open(sys.argv[1], "r")
-    alignmentFile = open(sys.argv[2], "r")
+    readsFile = open("uniqReadsCoverage/10-22079066-reads.txt", "r")
+    alignmentFile = open("test_alignment_mut.txt", "r")
     numMaps = defaultdict(int)
 
     alignmentDict = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: "")))
@@ -31,10 +32,12 @@ def main():
             data = line.split()
             read = data[9]
             if data[2] != "*":
-                exon = data[2].split("-")[0]
-                mutant = data[2].split("-")[1]
-                MDZ = data[18]
-                alignmentDict[read][exon][mutant] = MDZ
+                if len(data) >= 19:
+                    exon = data[2].split("-")[0]
+                    mutant = data[2].split("-")[1]
+                    MDZ = data[18]
+                    if MDZ.find("MD:Z:"):
+                        alignmentDict[read][exon][mutant] = MDZ
     print "Done."
 
     for line in readsFile:
@@ -42,6 +45,8 @@ def main():
         count = int(line.split()[0])
 
         if count > 50 and len(read) == 170:
+            print alignmentDict[read][exon]['1']
+            exit(0)
             natSNPS = parseMDtag(alignmentDict[read][exon]['1'])
 
             if len(alignmentDict[read]) > 1:
